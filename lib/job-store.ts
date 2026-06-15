@@ -2,6 +2,12 @@
 
 import { create } from "zustand";
 import type { ConversionManifest, HistoryRecord } from "@/lib/types";
+import { SESSION_KEY } from "@/lib/auth";
+
+function authHeaders(): HeadersInit {
+  const token = localStorage.getItem(SESSION_KEY);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 interface JobState {
   history: HistoryRecord[];
@@ -21,7 +27,9 @@ export const useJobStore = create<JobState>((set) => ({
   fetchHistory: async () => {
     set({ loading: true });
     try {
-      const res = await fetch("/focusimporter/api/history");
+      const res = await fetch("/focusimporter/api/history", {
+        headers: authHeaders(),
+      });
       if (!res.ok) throw new Error("fetch failed");
       const records: HistoryRecord[] = await res.json();
       set({ history: records });
@@ -49,7 +57,7 @@ export const useJobStore = create<JobState>((set) => ({
     // Fire-and-forget persist; a failed write won't block the user.
     fetch("/focusimporter/api/history", {
       method:  "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({
         jobId:       record.jobId,
         sourceFile:  record.sourceFileName,
@@ -68,7 +76,10 @@ export const useJobStore = create<JobState>((set) => ({
       ),
     }));
 
-    fetch(`/focusimporter/api/history/${encodeURIComponent(jobId)}`, { method: "PATCH" })
+    fetch(`/focusimporter/api/history/${encodeURIComponent(jobId)}`, {
+      method: "PATCH",
+      headers: authHeaders(),
+    })
       .catch((err) => console.error("[job-store] failed to mark overridden:", err));
   },
 }));

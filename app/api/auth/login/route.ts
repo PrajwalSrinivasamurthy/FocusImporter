@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/db";
-import { signSession, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth";
+import { signSession } from "@/lib/auth";
 import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -94,16 +94,7 @@ export async function POST(req: Request) {
       details: { permissions: user.permissions ?? "" },
     });
 
-    const res = NextResponse.json({ ok: true });
-    res.cookies.set(SESSION_COOKIE, token, {
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === "true",
-      sameSite: "lax",
-      maxAge: SESSION_MAX_AGE,
-      path: "/",
-    });
-
-    return res;
+    return NextResponse.json({ ok: true, token });
   } catch (err) {
     console.error("[auth/login]", err);
     log({

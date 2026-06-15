@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Download, ScrollText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { AuthGuard } from "@/components/auth-guard";
 
 export default function HistoryPage() {
   const history  = useJobStore((s) => s.history);
@@ -41,6 +42,7 @@ export default function HistoryPage() {
   };
 
   return (
+    <AuthGuard>
     <div className="space-y-10">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -136,5 +138,6 @@ export default function HistoryPage() {
         </Card>
       )}
     </div>
+    </AuthGuard>
   );
 }

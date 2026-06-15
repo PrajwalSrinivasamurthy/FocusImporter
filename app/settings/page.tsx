@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Check, KeyRound, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { useAccentStore, ACCENT_OPTIONS, type AccentColor } from "@/lib/accent-store";
+import { AuthGuard } from "@/components/auth-guard";
+import { SESSION_KEY } from "@/lib/auth";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -33,7 +35,10 @@ export default function SettingsPage() {
     try {
       const res = await fetch("/focusimporter/api/settings/password", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem(SESSION_KEY)}`,
+        },
         body: JSON.stringify({ currentPassword: current, newPassword: next }),
       });
       const data = await res.json();
@@ -42,6 +47,7 @@ export default function SettingsPage() {
         return;
       }
       toast.success("Password updated — please sign in again.");
+      localStorage.removeItem(SESSION_KEY);
       router.replace("/login");
     } catch {
       toast.error("Unable to reach the server. Please try again.");
@@ -51,6 +57,7 @@ export default function SettingsPage() {
   };
 
   return (
+    <AuthGuard>
     <div className="space-y-12">
 
       {/* ── Theme colours ── */}
@@ -185,5 +192,6 @@ export default function SettingsPage() {
       </section>
 
     </div>
+    </AuthGuard>
   );
 }
