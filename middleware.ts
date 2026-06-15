@@ -14,12 +14,12 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get(SESSION_COOKIE)?.value;
 
   if (!token) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/focusimporter/login", req.url));
   }
 
   const session = await verifySession(token);
   if (!session) {
-    const res = NextResponse.redirect(new URL("/login", req.url));
+    const res = NextResponse.redirect(new URL("/focusimporter/login", req.url));
     res.cookies.delete(SESSION_COOKIE);
     return res;
   }
