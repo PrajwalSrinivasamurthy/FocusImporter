@@ -26,6 +26,7 @@ RUN adduser --system --uid 1001 nextjs
 # Standalone output includes only what's needed to run
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder /app/node_modules ./node_modules
 
 # Persist logs and the SQLite database outside the container via volumes
 RUN mkdir -p /app/logs /app/data && chown nextjs:nodejs /app/logs /app/data
