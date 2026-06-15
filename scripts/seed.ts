@@ -1,8 +1,10 @@
 import bcrypt from "bcryptjs";
-import { db } from "../lib/db";
+import { getDb } from "../lib/db";
 
 const email = "admin@ttu.edu";
 const password = "Admin123!";
+
+const db = getDb();
 
 const existing = db
   .prepare<[string], { id: number }>("SELECT id FROM dashboard_users WHERE email = ?")

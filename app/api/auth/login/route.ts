@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { signSession, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth";
 import { log, requestMeta } from "@/lib/logger";
 
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const user = db
+    const user = getDb()
       .prepare<
         [string],
         {
