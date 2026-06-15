@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const isAuth = pathname === "/login";
+  const isAuth = pathname === "/login" || pathname === "/login/";
 
   if (isAuth) {
     return <>{children}</>;
