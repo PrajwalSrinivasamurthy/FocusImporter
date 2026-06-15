@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -26,7 +26,7 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const user = db
+    const user = getDb()
       .prepare<[number], { password_hash: string }>(
         "SELECT password_hash FROM dashboard_users WHERE id = ?",
       )
@@ -52,7 +52,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const newHash = await bcrypt.hash(newPassword, 12);
-    db.prepare(
+    getDb().prepare(
       `UPDATE dashboard_users
        SET password_hash  = ?,
            token_version  = token_version + 1,
