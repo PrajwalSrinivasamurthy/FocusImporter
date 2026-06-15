@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import sql from "mssql";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { dbQuery } from "@/lib/db-proxy";
 import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -21,17 +20,13 @@ export async function PATCH(
   const { jobId } = await params;
 
   try {
-    const db = await getDb();
-    await db
-      .request()
-      .input("userId", sql.Int,         session.userId)
-      .input("jobId",  sql.VarChar(64), jobId)
-      .query(`
-        UPDATE dbo.focus_conversion_history
-        SET    issues_overridden = 1
-        WHERE  job_id  = @jobId
-          AND  user_id = @userId
-      `);
+    await dbQuery(
+      `UPDATE dbo.focus_conversion_history
+       SET    issues_overridden = 1
+       WHERE  job_id  = @jobId
+         AND  user_id = @userId`,
+      { userId: session.userId, jobId },
+    );
 
     log({
       level: "info",
