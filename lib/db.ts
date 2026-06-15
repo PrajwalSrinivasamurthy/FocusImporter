@@ -1,20 +1,12 @@
-import sql from "mssql";
+import { Pool } from "pg";
 
-const config: sql.config = {
-  server: process.env.DB_SERVER!,
-  database: process.env.DB_NAME ?? "ttu_online_dev",
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  options: {
-    trustServerCertificate: true,
-    encrypt: true,
-  },
-  pool: { max: 10, min: 0, idleTimeoutMillis: 30_000 },
-};
+let pool: Pool | null = null;
 
-let pool: sql.ConnectionPool | null = null;
-
-export async function getDb(): Promise<sql.ConnectionPool> {
-  if (!pool) pool = await new sql.ConnectionPool(config).connect();
+export function getDb(): Pool {
+  if (!pool) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+    });
+  }
   return pool;
 }

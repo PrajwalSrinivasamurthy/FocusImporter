@@ -7,7 +7,6 @@ export interface SessionPayload {
   userId: number;
   email: string;
   permissions: string;
-  tokenVersion: number;
 }
 
 const secret = () =>

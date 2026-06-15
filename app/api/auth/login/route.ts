@@ -24,25 +24,22 @@ export async function POST(req: Request) {
   }
 
   try {
-    const db = await getDb();
+    const db = getDb();
 
-    const result = await db
-      .request()
-      .input("email", email.trim().toLowerCase())
-      .query<{
-        id: number;
-        email: string;
-        password_hash: string;
-        project: string;
-        permissions: string;
-        token_version: number;
-      }>(`
-        SELECT id, email, password_hash, project, permissions, token_version
-        FROM   dbo.dashboard_users
-        WHERE  email = @email
-      `);
+    const result = await db.query<{
+      id: number;
+      email: string;
+      password_hash: string;
+      project: string;
+      permissions: string;
+    }>(
+      `SELECT id, email, password_hash, project, permissions
+       FROM   dashboard_users
+       WHERE  email = $1`,
+      [email.trim().toLowerCase()],
+    );
 
-    const user = result.recordset[0];
+    const user = result.rows[0];
 
     // Run bcrypt even when user not found to prevent timing-based enumeration.
     const hash = user?.password_hash ?? "$2b$12$notarealhashjustfortimingggggggggggggg";
@@ -63,7 +60,7 @@ export async function POST(req: Request) {
       );
     }
 
-    if (user.project !== "Focus") {
+    if (user.project !== "focusimporter") {
       log({
         level: "warn",
         event: "auth.login.not_whitelisted",
@@ -83,7 +80,6 @@ export async function POST(req: Request) {
       userId: user.id,
       email: user.email,
       permissions: user.permissions ?? "",
-      tokenVersion: user.token_version ?? 0,
     });
 
     log({
