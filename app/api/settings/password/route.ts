@@ -1,9 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { dbQuery } from "@/lib/db-proxy";
 import { log, requestMeta } from "@/lib/logger";
-import sql from "mssql";
 
 export const runtime = "nodejs";
 
@@ -27,16 +26,12 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const db = await getDb();
+    const rows = await dbQuery<{ password_hash: string }>(
+      "SELECT password_hash FROM dbo.dashboard_users WHERE id = @userId",
+      { userId: session.userId },
+    );
 
-    const result = await db
-      .request()
-      .input("userId", sql.Int, session.userId)
-      .query<{ password_hash: string }>(
-        "SELECT password_hash FROM dbo.dashboard_users WHERE id = @userId"
-      );
-
-    const user = result.recordset[0];
+    const user = rows[0];
     if (!user) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
@@ -58,17 +53,14 @@ export async function PUT(req: NextRequest) {
     }
 
     const newHash = await bcrypt.hash(newPassword, 12);
-    await db
-      .request()
-      .input("userId", sql.Int, session.userId)
-      .input("hash", sql.NVarChar, newHash)
-      .query(`
-        UPDATE dbo.dashboard_users
-        SET password_hash  = @hash,
-            token_version  = token_version + 1,
-            updated_at     = SYSUTCDATETIME()
-        WHERE id = @userId
-      `);
+    await dbQuery(
+      `UPDATE dbo.dashboard_users
+       SET password_hash  = @hash,
+           token_version  = token_version + 1,
+           updated_at     = SYSUTCDATETIME()
+       WHERE id = @userId`,
+      { userId: session.userId, hash: newHash },
+    );
 
     log({
       level: "info",
