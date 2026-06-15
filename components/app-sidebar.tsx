@@ -22,7 +22,7 @@ export function AppSidebar() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    await fetch("/focusimporter/api/auth/logout", { method: "POST" });
     router.replace("/login");
   };
 
