@@ -30,9 +30,15 @@ export default function LoginPage() {
         setError(data.error ?? "Sign in failed.");
         return;
       }
+      if (!data.token) {
+        setError("Sign in failed.");
+        return;
+      }
       localStorage.setItem(SESSION_KEY, data.token);
+      console.log("Login success, redirecting...");
       router.replace("/");
-    } catch {
+    } catch (error) {
+      console.error("Login error:", error);
       setError("Unable to reach the server. Please try again.");
     } finally {
       setLoading(false);
