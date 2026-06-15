@@ -31,7 +31,7 @@ export default function SettingsPage() {
     }
     setSaving(true);
     try {
-      const res = await fetch("/api/settings/password", {
+      const res = await fetch("/focusimporter/api/settings/password", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword: current, newPassword: next }),
