@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import sql from "mssql";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { dbQuery } from "@/lib/db-proxy";
 import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -16,27 +15,24 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Session expired." }, { status: 401 });
 
   try {
-    const db = await getDb();
-    const result = await db
-      .request()
-      .input("userId", sql.Int, session.userId)
-      .query<{
-        job_id: string;
-        source_file: string;
-        output_files: string;
-        issue_count: number;
-        issues_overridden: boolean;
-        status: string;
-        created_at: string;
-      }>(`
-        SELECT job_id, source_file, output_files,
-               issue_count, issues_overridden, status, created_at
-        FROM   dbo.focus_conversion_history
-        WHERE  user_id = @userId
-        ORDER  BY created_at DESC
-      `);
+    const rows = await dbQuery<{
+      job_id: string;
+      source_file: string;
+      output_files: string;
+      issue_count: number;
+      issues_overridden: boolean;
+      status: string;
+      created_at: string;
+    }>(
+      `SELECT job_id, source_file, output_files,
+              issue_count, issues_overridden, status, created_at
+       FROM   dbo.focus_conversion_history
+       WHERE  user_id = @userId
+       ORDER  BY created_at DESC`,
+      { userId: session.userId },
+    );
 
-    const records = result.recordset.map((r) => ({
+    const records = rows.map((r) => ({
       jobId:            r.job_id,
       createdAt:        r.created_at,
       sourceFileName:   r.source_file,
@@ -97,21 +93,20 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const db = await getDb();
-    await db
-      .request()
-      .input("userId",      sql.Int,           session.userId)
-      .input("jobId",       sql.VarChar(64),   body.jobId)
-      .input("sourceFile",  sql.NVarChar(255),  body.sourceFile)
-      .input("outputFiles", sql.NVarChar(500),  body.outputFiles)
-      .input("issueCount",  sql.Int,            body.issueCount)
-      .input("status",      sql.VarChar(30),    body.status)
-      .query(`
-        INSERT INTO dbo.focus_conversion_history
-          (user_id, job_id, source_file, output_files, issue_count, status)
-        VALUES
-          (@userId, @jobId, @sourceFile, @outputFiles, @issueCount, @status)
-      `);
+    await dbQuery(
+      `INSERT INTO dbo.focus_conversion_history
+         (user_id, job_id, source_file, output_files, issue_count, status)
+       VALUES
+         (@userId, @jobId, @sourceFile, @outputFiles, @issueCount, @status)`,
+      {
+        userId: session.userId,
+        jobId: body.jobId,
+        sourceFile: body.sourceFile,
+        outputFiles: body.outputFiles,
+        issueCount: body.issueCount,
+        status: body.status,
+      },
+    );
 
     log({
       level: "info",
