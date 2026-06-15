@@ -1,14 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { SESSION_KEY } from "@/lib/auth";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -36,7 +34,7 @@ export default function LoginPage() {
       }
       localStorage.setItem(SESSION_KEY, data.token);
       console.log("Login success, redirecting...");
-      router.replace("/");
+      window.location.href = "/focusimporter/";
     } catch (error) {
       console.error("Login error:", error);
       setError("Unable to reach the server. Please try again.");
