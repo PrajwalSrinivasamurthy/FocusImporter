@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { dbQuery } from "@/lib/db-proxy";
+import { db } from "@/lib/db";
 import { signSession, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth";
 import { log, requestMeta } from "@/lib/logger";
 
@@ -24,21 +24,23 @@ export async function POST(req: Request) {
   }
 
   try {
-    const rows = await dbQuery<{
-      id: number;
-      email: string;
-      password_hash: string;
-      project: string;
-      permissions: string;
-      token_version: number;
-    }>(
-      `SELECT id, email, password_hash, project, permissions, token_version
-       FROM   dbo.dashboard_users
-       WHERE  email = @email`,
-      { email: email.trim().toLowerCase() },
-    );
-
-    const user = rows[0];
+    const user = db
+      .prepare<
+        [string],
+        {
+          id: number;
+          email: string;
+          password_hash: string;
+          project: string;
+          permissions: string;
+          token_version: number;
+        }
+      >(
+        `SELECT id, email, password_hash, project, permissions, token_version
+         FROM   dashboard_users
+         WHERE  email = ?`,
+      )
+      .get(email.trim().toLowerCase());
 
     // Run bcrypt even when user not found to prevent timing-based enumeration.
     const hash = user?.password_hash ?? "$2b$12$notarealhashjustfortimingggggggggggggg";
