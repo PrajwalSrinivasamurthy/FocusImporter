@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifySession, SESSION_COOKIE } from "@/lib/auth";
+import { verifySession, getBearerToken } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { log, requestMeta } from "@/lib/logger";
 
@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   const { ip, userAgent } = requestMeta(req);
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
+  const token = getBearerToken(req);
   if (!token) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   const session = await verifySession(token);
   if (!session) return NextResponse.json({ error: "Session expired." }, { status: 401 });
@@ -84,7 +84,7 @@ interface InsertBody {
 
 export async function POST(req: NextRequest) {
   const { ip, userAgent } = requestMeta(req);
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
+  const token = getBearerToken(req);
   if (!token) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   const session = await verifySession(token);
   if (!session) return NextResponse.json({ error: "Session expired." }, { status: 401 });
