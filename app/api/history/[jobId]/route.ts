@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -20,7 +20,7 @@ export async function PATCH(
   const { jobId } = await params;
 
   try {
-    db.prepare(
+    getDb().prepare(
       `UPDATE focus_conversion_history
        SET    issues_overridden = 1
        WHERE  job_id  = ?

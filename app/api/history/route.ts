@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Session expired." }, { status: 401 });
 
   try {
-    const rows = db
+    const rows = getDb()
       .prepare<
         [number],
         {
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    db.prepare(
+    getDb().prepare(
       `INSERT INTO focus_conversion_history
          (user_id, job_id, source_file, output_files, issue_count, status)
        VALUES
