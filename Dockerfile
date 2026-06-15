@@ -1,6 +1,6 @@
 # ── Stage 1: Install dependencies ─────────────────────────────────────────────
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -27,8 +27,8 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Persist logs outside the container via a named volume
-RUN mkdir -p /app/logs && chown nextjs:nodejs /app/logs
+# Persist logs and the SQLite database outside the container via volumes
+RUN mkdir -p /app/logs /app/data && chown nextjs:nodejs /app/logs /app/data
 
 USER nextjs
 

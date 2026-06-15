@@ -16,6 +16,13 @@ out/
 logs/
 *.log
 
+# SQLite database
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts

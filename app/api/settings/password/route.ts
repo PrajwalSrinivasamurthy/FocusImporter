@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth";
-import { dbQuery } from "@/lib/db-proxy";
+import { db } from "@/lib/db";
 import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -26,12 +26,11 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const rows = await dbQuery<{ password_hash: string }>(
-      "SELECT password_hash FROM dbo.dashboard_users WHERE id = @userId",
-      { userId: session.userId },
-    );
-
-    const user = rows[0];
+    const user = db
+      .prepare<[number], { password_hash: string }>(
+        "SELECT password_hash FROM dashboard_users WHERE id = ?",
+      )
+      .get(session.userId);
     if (!user) {
       return NextResponse.json({ error: "User not found." }, { status: 404 });
     }
@@ -53,14 +52,13 @@ export async function PUT(req: NextRequest) {
     }
 
     const newHash = await bcrypt.hash(newPassword, 12);
-    await dbQuery(
-      `UPDATE dbo.dashboard_users
-       SET password_hash  = @hash,
+    db.prepare(
+      `UPDATE dashboard_users
+       SET password_hash  = ?,
            token_version  = token_version + 1,
-           updated_at     = SYSUTCDATETIME()
-       WHERE id = @userId`,
-      { userId: session.userId, hash: newHash },
-    );
+           updated_at     = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+    ).run(newHash, session.userId);
 
     log({
       level: "info",

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { verifySession, SESSION_COOKIE } from "@/lib/auth";
-import { dbQuery } from "@/lib/db-proxy";
+import { db } from "@/lib/db";
 import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -15,22 +15,26 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Session expired." }, { status: 401 });
 
   try {
-    const rows = await dbQuery<{
-      job_id: string;
-      source_file: string;
-      output_files: string;
-      issue_count: number;
-      issues_overridden: boolean;
-      status: string;
-      created_at: string;
-    }>(
-      `SELECT job_id, source_file, output_files,
-              issue_count, issues_overridden, status, created_at
-       FROM   dbo.focus_conversion_history
-       WHERE  user_id = @userId
-       ORDER  BY created_at DESC`,
-      { userId: session.userId },
-    );
+    const rows = db
+      .prepare<
+        [number],
+        {
+          job_id: string;
+          source_file: string;
+          output_files: string;
+          issue_count: number;
+          issues_overridden: number;
+          status: string;
+          created_at: string;
+        }
+      >(
+        `SELECT job_id, source_file, output_files,
+                issue_count, issues_overridden, status, created_at
+         FROM   focus_conversion_history
+         WHERE  user_id = ?
+         ORDER  BY created_at DESC`,
+      )
+      .all(session.userId);
 
     const records = rows.map((r) => ({
       jobId:            r.job_id,
@@ -93,19 +97,18 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await dbQuery(
-      `INSERT INTO dbo.focus_conversion_history
+    db.prepare(
+      `INSERT INTO focus_conversion_history
          (user_id, job_id, source_file, output_files, issue_count, status)
        VALUES
-         (@userId, @jobId, @sourceFile, @outputFiles, @issueCount, @status)`,
-      {
-        userId: session.userId,
-        jobId: body.jobId,
-        sourceFile: body.sourceFile,
-        outputFiles: body.outputFiles,
-        issueCount: body.issueCount,
-        status: body.status,
-      },
+         (?, ?, ?, ?, ?, ?)`,
+    ).run(
+      session.userId,
+      body.jobId,
+      body.sourceFile,
+      body.outputFiles,
+      body.issueCount,
+      body.status,
     );
 
     log({
