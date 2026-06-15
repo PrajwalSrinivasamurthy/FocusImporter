@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SESSION_KEY } from "@/lib/auth";
 import {
   ArrowLeftRight,
   LogOut,
@@ -22,7 +23,12 @@ export function AppSidebar() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    await fetch("/focusimporter/api/auth/logout", { method: "POST" });
+    const token = localStorage.getItem(SESSION_KEY);
+    await fetch("/focusimporter/api/auth/logout", {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    localStorage.removeItem(SESSION_KEY);
     router.replace("/login");
   };
 

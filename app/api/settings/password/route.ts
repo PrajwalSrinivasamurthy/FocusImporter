@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import { verifySession, SESSION_COOKIE } from "@/lib/auth";
+import { verifySession, getBearerToken } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { log, requestMeta } from "@/lib/logger";
 
@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 export async function PUT(req: NextRequest) {
   const { ip, userAgent } = requestMeta(req);
 
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
+  const token = getBearerToken(req);
   if (!token) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   const session = await verifySession(token);
   if (!session) return NextResponse.json({ error: "Session expired." }, { status: 401 });
@@ -69,9 +69,7 @@ export async function PUT(req: NextRequest) {
       userAgent,
     });
 
-    const res = NextResponse.json({ ok: true });
-    res.cookies.delete(SESSION_COOKIE);
-    return res;
+    return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[settings/password]", err);
     log({

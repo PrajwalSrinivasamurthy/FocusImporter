@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { SESSION_KEY } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -29,6 +30,7 @@ export default function LoginPage() {
         setError(data.error ?? "Sign in failed.");
         return;
       }
+      localStorage.setItem(SESSION_KEY, data.token);
       router.replace("/");
     } catch {
       setError("Unable to reach the server. Please try again.");
