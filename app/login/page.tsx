@@ -29,7 +29,7 @@ export default function LoginPage() {
         setError(data.error ?? "Sign in failed.");
         return;
       }
-      router.replace("/");
+      router.replace("/focusimporter/");
     } catch {
       setError("Unable to reach the server. Please try again.");
     } finally {
