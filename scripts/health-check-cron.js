@@ -3,9 +3,10 @@
 // Runs in its own container (see docker-compose.yml's "healthcheck" service).
 //
 // Every CHECK_INTERVAL_MS it GETs HEALTH_CHECK_URL. On failure it texts
-// TWILIO_TO_NUMBER via the Twilio REST API. It only sends one "down" SMS per
-// outage (not one every 30 min) and one "recovered" SMS when it comes back,
-// to avoid spamming/costing money while an outage drags on.
+// everyone in TWILIO_TO_NUMBER (comma-separated) via the Twilio REST API. It
+// only sends one "down" SMS per outage (not one every 30 min) and one
+// "recovered" SMS when it comes back, to avoid spamming/costing money while
+// an outage drags on.
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 const REQUEST_TIMEOUT_MS = 10 * 1000;
@@ -31,31 +32,37 @@ for (const [name, value] of Object.entries({
   }
 }
 
+const TO_NUMBERS = TWILIO_TO_NUMBER.split(",").map((n) => n.trim()).filter(Boolean);
+
 let isDown = false;
 
 async function sendSms(body) {
   const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
   const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64");
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${auth}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      To: TWILIO_TO_NUMBER,
-      From: TWILIO_FROM_NUMBER,
-      Body: body,
-    }),
-  });
+  await Promise.all(
+    TO_NUMBERS.map(async (to) => {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${auth}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          To: to,
+          From: TWILIO_FROM_NUMBER,
+          Body: body,
+        }),
+      });
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    console.error(`[health-check-cron] Twilio SMS failed (${res.status}): ${text}`);
-  } else {
-    console.log("[health-check-cron] SMS alert sent");
-  }
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        console.error(`[health-check-cron] Twilio SMS to ${to} failed (${res.status}): ${text}`);
+      } else {
+        console.log(`[health-check-cron] SMS alert sent to ${to}`);
+      }
+    }),
+  );
 }
 
 async function checkOnce() {
