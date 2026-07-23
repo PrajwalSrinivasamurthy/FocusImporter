@@ -16,6 +16,9 @@ out/
 logs/
 *.log
 
+# SQLite data
+data/
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts

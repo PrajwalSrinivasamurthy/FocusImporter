@@ -26,20 +26,21 @@ export async function POST(req: Request) {
   try {
     const db = getDb();
 
-    const result = await db.query<{
-      id: number;
-      email: string;
-      password_hash: string;
-      project: string;
-      permissions: string;
-    }>(
-      `SELECT id, email, password_hash, project, permissions
-       FROM   dashboard_users
-       WHERE  email = $1`,
-      [email.trim().toLowerCase()],
-    );
-
-    const user = result.rows[0];
+    const user = db
+      .prepare(
+        `SELECT id, email, password_hash, project, permissions
+         FROM dashboard_users
+         WHERE email = ?`,
+      )
+      .get(email.trim().toLowerCase()) as
+      | {
+          id: number;
+          email: string;
+          password_hash: string;
+          project: string;
+          permissions: string;
+        }
+      | undefined;
 
     // Run bcrypt even when user not found to prevent timing-based enumeration.
     const hash = user?.password_hash ?? "$2b$12$notarealhashjustfortimingggggggggggggg";

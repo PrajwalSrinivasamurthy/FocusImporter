@@ -21,13 +21,24 @@ export async function PATCH(
 
   try {
     const db = getDb();
-    await db.query(
+    // Ensure the job belongs to the logged-in user.
+    const record = db
+      .prepare(
+        `SELECT id
+         FROM focus_conversion_history
+         WHERE job_id = ? AND user_id = ?`,
+      )
+      .get(jobId, session.userId) as { id: number } | undefined;
+
+    if (!record) {
+      return NextResponse.json({ error: "Not found." }, { status: 404 });
+    }
+
+    db.prepare(
       `UPDATE focus_conversion_history
-       SET    issues_overridden = TRUE
-       WHERE  job_id  = $1
-         AND  user_id = $2`,
-      [jobId, session.userId],
-    );
+       SET issues_overridden = 1
+       WHERE job_id = ? AND user_id = ?`,
+    ).run(jobId, session.userId);
 
     log({
       level: "info",

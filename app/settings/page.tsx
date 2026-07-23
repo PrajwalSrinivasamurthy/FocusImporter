@@ -30,8 +30,8 @@ export default function SettingsPage() {
     }
     setSaving(true);
     try {
-      const res = await fetch(withBasePath("/api/settings/password"), {
-        method: "PUT",
+      const res = await fetch(withBasePath("/api/auth/change-password"), {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword: current, newPassword: next }),
       });

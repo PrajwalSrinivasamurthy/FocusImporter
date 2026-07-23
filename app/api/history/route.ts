@@ -16,24 +16,25 @@ export async function GET(req: NextRequest) {
 
   try {
     const db = getDb();
-    const result = await db.query<{
+    const rows = db
+      .prepare(
+        `SELECT job_id, source_file, output_files,
+                issue_count, issues_overridden, status, created_at
+         FROM focus_conversion_history
+         WHERE user_id = ?
+         ORDER BY created_at DESC`,
+      )
+      .all(session.userId) as Array<{
       job_id: string;
       source_file: string;
       output_files: string;
       issue_count: number;
-      issues_overridden: boolean;
+      issues_overridden: number;
       status: string;
       created_at: string;
-    }>(
-      `SELECT job_id, source_file, output_files,
-              issue_count, issues_overridden, status, created_at
-       FROM   focus_conversion_history
-       WHERE  user_id = $1
-       ORDER  BY created_at DESC`,
-      [session.userId],
-    );
+    }>;
 
-    const records = result.rows.map((r) => ({
+    const records = rows.map((r) => ({
       jobId:            r.job_id,
       createdAt:        r.created_at,
       sourceFileName:   r.source_file,
@@ -95,12 +96,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const db = getDb();
-    await db.query(
+    db.prepare(
       `INSERT INTO focus_conversion_history
          (user_id, job_id, source_file, output_files, issue_count, status)
        VALUES
-         ($1, $2, $3, $4, $5, $6)`,
-      [session.userId, body.jobId, body.sourceFile, body.outputFiles, body.issueCount, body.status],
+         (?, ?, ?, ?, ?, ?)`,
+    ).run(
+      session.userId,
+      body.jobId,
+      body.sourceFile,
+      body.outputFiles,
+      body.issueCount,
+      body.status,
     );
 
     log({

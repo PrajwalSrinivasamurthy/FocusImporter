@@ -21,7 +21,7 @@ export async function GET() {
       process.env.npm_lifecycle_event === "build";
 
     if (!isBuildTime) {
-      await getDb().query("SELECT 1");
+      getDb().prepare("SELECT 1").get();
     }
     return NextResponse.json({ status: "ok" });
   } catch (err) {
