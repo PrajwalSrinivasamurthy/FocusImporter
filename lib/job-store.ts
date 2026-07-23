@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import type { ConversionManifest, HistoryRecord } from "@/lib/types";
+import { withBasePath } from "@/lib/base-path";
 
 interface JobState {
   history: HistoryRecord[];
@@ -21,7 +22,7 @@ export const useJobStore = create<JobState>((set) => ({
   fetchHistory: async () => {
     set({ loading: true });
     try {
-      const res = await fetch("/api/history");
+      const res = await fetch(withBasePath("/api/history"));
       if (!res.ok) throw new Error("fetch failed");
       const records: HistoryRecord[] = await res.json();
       set({ history: records });
@@ -47,7 +48,7 @@ export const useJobStore = create<JobState>((set) => ({
     set((s) => ({ history: [record, ...s.history] }));
 
     // Fire-and-forget persist; a failed write won't block the user.
-    fetch("/api/history", {
+    fetch(withBasePath("/api/history"), {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -68,7 +69,7 @@ export const useJobStore = create<JobState>((set) => ({
       ),
     }));
 
-    fetch(`/api/history/${encodeURIComponent(jobId)}`, { method: "PATCH" })
+    fetch(withBasePath(`/api/history/${encodeURIComponent(jobId)}`), { method: "PATCH" })
       .catch((err) => console.error("[job-store] failed to mark overridden:", err));
   },
 }));

@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Check, KeyRound, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { useAccentStore, ACCENT_OPTIONS, type AccentColor } from "@/lib/accent-store";
+import { BASE_PATH, withBasePath } from "@/lib/base-path";
 
 export default function SettingsPage() {
-  const router = useRouter();
   const accent = useAccentStore((s) => s.accent);
   const setAccent = useAccentStore((s) => s.setAccent);
 
@@ -31,7 +30,7 @@ export default function SettingsPage() {
     }
     setSaving(true);
     try {
-      const res = await fetch("/api/settings/password", {
+      const res = await fetch(withBasePath("/api/settings/password"), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword: current, newPassword: next }),
@@ -42,7 +41,8 @@ export default function SettingsPage() {
         return;
       }
       toast.success("Password updated — please sign in again.");
-      router.replace("/login");
+      // Full-path redirect for subpath deployment.
+      window.location.href = `${BASE_PATH}/login`;
     } catch {
       toast.error("Unable to reach the server. Please try again.");
     } finally {

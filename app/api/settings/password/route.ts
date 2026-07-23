@@ -73,7 +73,8 @@ export async function PUT(req: NextRequest) {
     });
 
     const res = NextResponse.json({ ok: true });
-    res.cookies.delete(SESSION_COOKIE);
+    // Cookie is scoped to the deployment basePath; clear it with the same path.
+    res.cookies.set(SESSION_COOKIE, "", { path: "/focusimporter", maxAge: 0 });
     return res;
   } catch (err) {
     console.error("[settings/password]", err);

@@ -95,10 +95,11 @@ export async function POST(req: Request) {
     const res = NextResponse.json({ ok: true });
     res.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      // NOTE: This app is deployed behind nginx on a LAN; do NOT gate this on NODE_ENV.
+      secure: false,
       sameSite: "lax",
       maxAge: SESSION_MAX_AGE,
-      path: "/",
+      path: "/focusimporter",
     });
 
     return res;

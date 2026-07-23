@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile
     container_name: focus-importer
     ports:
-      - "3000:3000"
+      - "3007:3000"
     env_file:
       - .env.local
     depends_on:
@@ -34,7 +34,7 @@ services:
     environment:
       # Overrides the .env.local value so the monitor reaches the app over
       # the docker-compose network rather than localhost.
-      HEALTH_CHECK_URL: http://app:3000/api/health
+      HEALTH_CHECK_URL: http://app:3000/focusimporter/api/health
     volumes:
       - ./scripts/health-check-cron.js:/health-check-cron.js:ro
     command: ["node", "/health-check-cron.js"]

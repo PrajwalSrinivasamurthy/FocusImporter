@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BASE_PATH, withBasePath } from "@/lib/base-path";
 import {
   ArrowLeftRight,
   LogOut,
@@ -19,11 +20,11 @@ const NAV = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.replace("/login");
+    await fetch(withBasePath("/api/auth/logout"), { method: "POST" });
+    // Full-path redirect for subpath deployment.
+    window.location.href = `${BASE_PATH}/login`;
   };
 
   return (

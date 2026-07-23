@@ -2,5 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
+  basePath: "/focusimporter",
 };
 export default nextConfig;

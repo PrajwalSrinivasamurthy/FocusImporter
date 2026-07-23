@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
+import { BASE_PATH, withBasePath } from "@/lib/base-path";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,7 +18,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(withBasePath("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -29,7 +28,8 @@ export default function LoginPage() {
         setError(data.error ?? "Sign in failed.");
         return;
       }
-      router.replace("/");
+      // Use a full path (incl. basePath) to avoid subpath proxy edge-cases.
+      window.location.href = `${BASE_PATH}/`;
     } catch {
       setError("Unable to reach the server. Please try again.");
     } finally {
