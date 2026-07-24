@@ -12,10 +12,16 @@ export async function PATCH(
   { params }: { params: Promise<{ jobId: string }> },
 ) {
   const { ip, userAgent } = requestMeta(req);
+  // AUTH DISABLED (temporary)
+  // Keep original session-based code commented out below.
+  const session = { userId: 1, email: "anonymous@local", permissions: "" };
+
+  /*
   const token = req.cookies.get(SESSION_COOKIE)?.value;
   if (!token) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   const session = await verifySession(token);
   if (!session) return NextResponse.json({ error: "Session expired." }, { status: 401 });
+  */
 
   const { jobId } = await params;
 

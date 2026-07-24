@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { SESSION_COOKIE } from "@/lib/auth";
-
-const BASE_PATH = "/focusimporter";
-const PUBLIC = [`${BASE_PATH}/login`, `${BASE_PATH}/api/auth`, `${BASE_PATH}/api/health`];
+// AUTH DISABLED (temporary)
+// Keeping the original auth middleware logic commented out below.
 
 export async function middleware(req: NextRequest) {
+  return NextResponse.next();
+
+  /*
+  import { SESSION_COOKIE } from "@/lib/auth";
+
+  const BASE_PATH = "/focusimporter";
+  const PUBLIC = [`${BASE_PATH}/login`, `${BASE_PATH}/api/auth`, `${BASE_PATH}/api/health`];
+
   const { pathname } = req.nextUrl;
 
   if (PUBLIC.some((p) => pathname.startsWith(p))) {
@@ -19,6 +25,7 @@ export async function middleware(req: NextRequest) {
   }
 
   return NextResponse.next();
+  */
 }
 
 export const config = {

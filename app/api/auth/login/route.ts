@@ -7,6 +7,11 @@ import { log, requestMeta } from "@/lib/logger";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
+  // AUTH DISABLED (temporary)
+  // Keep the original login + cookie behavior commented out below.
+  return NextResponse.json({ ok: true });
+
+  /*
   const { ip, userAgent } = requestMeta(req);
   let email: string, password: string;
 
@@ -119,4 +124,5 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
+  */
 }

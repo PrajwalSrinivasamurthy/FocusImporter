@@ -12,6 +12,11 @@ interface Body {
 }
 
 export async function POST(req: NextRequest) {
+  // AUTH DISABLED (temporary)
+  // Keep the original change-password behavior below for later re-enable.
+  return NextResponse.json({ error: "Authentication is disabled." }, { status: 410 });
+
+  /*
   const { ip, userAgent } = requestMeta(req);
 
   const token = req.cookies.get(SESSION_COOKIE)?.value;
@@ -82,4 +87,5 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ error: "An unexpected error occurred. Please try again." }, { status: 500 });
   }
+  */
 }
