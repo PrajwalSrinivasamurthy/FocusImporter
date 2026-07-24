@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^12.10.1",
+    "better-sqlite3": "^11.8.1",
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.0",
     "jose": "^6.2.3",
