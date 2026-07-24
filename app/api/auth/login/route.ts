@@ -26,7 +26,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
     }
 
-    return NextResponse.json({ ok: true, email: row.email });
+    const res = NextResponse.json({ ok: true, email: row.email });
+    // Simple cookie gate for middleware. Not httpOnly; this is a minimal
+    // deployment-friendly guard (not a secure session).
+    res.cookies.set("fi_auth", "1", {
+      httpOnly: false,
+      secure: false,
+      sameSite: "lax",
+      path: "/focusimporter",
+      // 8 hours
+      maxAge: 60 * 60 * 8,
+    });
+    return res;
   } catch (err) {
     console.error("[auth/login]", err);
     return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });

@@ -12,6 +12,8 @@ export async function POST(req: NextRequest) {
     userAgent,
   });
 
-  // No cookies; client clears localStorage.
-  return NextResponse.json({ ok: true });
+  // Clear cookie gate; client also clears localStorage.
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set("fi_auth", "", { path: "/focusimporter", maxAge: 0 });
+  return res;
 }
