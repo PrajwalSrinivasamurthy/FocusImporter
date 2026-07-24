@@ -5,8 +5,7 @@ node_modules/
 .next/
 out/
 
-# Environment files — never commit real secrets
-.env
+# Environment files — never comm
 .env.local
 .env.development.local
 .env.test.local
