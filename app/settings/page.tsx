@@ -30,10 +30,11 @@ export default function SettingsPage() {
     }
     setSaving(true);
     try {
+      const email = localStorage.getItem("fi_user") ?? "";
       const res = await fetch(withBasePath("/api/auth/change-password"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword: current, newPassword: next }),
+        body: JSON.stringify({ email, currentPassword: current, newPassword: next }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -42,6 +43,7 @@ export default function SettingsPage() {
       }
       toast.success("Password updated — please sign in again.");
       // Full-path redirect for subpath deployment.
+      localStorage.removeItem("fi_user");
       window.location.href = `${BASE_PATH}/login`;
     } catch {
       toast.error("Unable to reach the server. Please try again.");

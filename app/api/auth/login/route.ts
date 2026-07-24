@@ -1,15 +1,36 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { getDb } from "@/lib/db";
-import { signSession, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth";
-import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  // AUTH DISABLED (temporary)
-  // Keep the original login + cookie behavior commented out below.
-  return NextResponse.json({ ok: true });
+  let email: string, password: string;
+  try {
+    ({ email, password } = await req.json());
+  } catch {
+    return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
+  }
+
+  const normalized = email?.trim().toLowerCase();
+  if (!normalized || !password) {
+    return NextResponse.json({ error: "Email and password are required." }, { status: 400 });
+  }
+
+  try {
+    const db = getDb();
+    const row = db
+      .prepare("SELECT email, password FROM dashboard_users WHERE email = ?")
+      .get(normalized) as { email: string; password: string } | undefined;
+
+    if (!row || row.password !== password) {
+      return NextResponse.json({ error: "Invalid email or password." }, { status: 401 });
+    }
+
+    return NextResponse.json({ ok: true, email: row.email });
+  } catch (err) {
+    console.error("[auth/login]", err);
+    return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });
+  }
 
   /*
   const { ip, userAgent } = requestMeta(req);

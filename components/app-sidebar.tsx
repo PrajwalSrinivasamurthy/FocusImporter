@@ -23,6 +23,7 @@ export function AppSidebar() {
 
   const handleLogout = async () => {
     await fetch(withBasePath("/api/auth/logout"), { method: "POST" });
+    localStorage.removeItem("fi_user");
     // Full-path redirect for subpath deployment.
     window.location.href = `${BASE_PATH}/login`;
   };

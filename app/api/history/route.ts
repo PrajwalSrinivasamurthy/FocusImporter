@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifySession, SESSION_COOKIE } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { log, requestMeta } from "@/lib/logger";
 
@@ -9,33 +8,26 @@ export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   const { ip, userAgent } = requestMeta(req);
-  // AUTH DISABLED (temporary)
-  // Keep original session-based code commented out below.
-  const session = { userId: 1, email: "anonymous@local", permissions: "" };
-
-  /*
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
-  if (!token) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-  const session = await verifySession(token);
-  if (!session) return NextResponse.json({ error: "Session expired." }, { status: 401 });
-  */
+  const email = (req.nextUrl.searchParams.get("email") ?? "").trim().toLowerCase();
+  if (!email) {
+    return NextResponse.json({ error: "Email is required." }, { status: 400 });
+  }
 
   try {
     const db = getDb();
     const rows = db
       .prepare(
         `SELECT job_id, source_file, output_files,
-                issue_count, issues_overridden, status, created_at
+                issue_count, status, created_at
          FROM focus_conversion_history
-         WHERE user_id = ?
+         WHERE email = ?
          ORDER BY created_at DESC`,
       )
-      .all(session.userId) as Array<{
+      .all(email) as Array<{
       job_id: string;
       source_file: string;
       output_files: string;
       issue_count: number;
-      issues_overridden: number;
       status: string;
       created_at: string;
     }>;
@@ -46,15 +38,14 @@ export async function GET(req: NextRequest) {
       sourceFileName:   r.source_file,
       outputFiles:      r.output_files,
       issueCount:       r.issue_count,
-      issuesOverridden: Boolean(r.issues_overridden),
+      issuesOverridden: false,
       status:           r.status,
     }));
 
     log({
       level: "info",
       event: "history.fetched",
-      userId: session.userId,
-      email: session.email,
+      email,
       ip,
       userAgent,
       details: { recordCount: records.length },
@@ -66,8 +57,7 @@ export async function GET(req: NextRequest) {
     log({
       level: "error",
       event: "history.fetch.error",
-      userId: session.userId,
-      email: session.email,
+      email,
       ip,
       userAgent,
       details: { error: String(err) },
@@ -79,6 +69,7 @@ export async function GET(req: NextRequest) {
 // ── POST /api/history ─────────────────────────────────────────────────────────
 
 interface InsertBody {
+  email: string;
   jobId: string;
   sourceFile: string;
   outputFiles: string;
@@ -88,16 +79,6 @@ interface InsertBody {
 
 export async function POST(req: NextRequest) {
   const { ip, userAgent } = requestMeta(req);
-  // AUTH DISABLED (temporary)
-  // Keep original session-based code commented out below.
-  const session = { userId: 1, email: "anonymous@local", permissions: "" };
-
-  /*
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
-  if (!token) return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-  const session = await verifySession(token);
-  if (!session) return NextResponse.json({ error: "Session expired." }, { status: 401 });
-  */
 
   let body: InsertBody;
   try {
@@ -106,15 +87,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
+  const email = body.email?.trim().toLowerCase();
+  if (!email) {
+    return NextResponse.json({ error: "Email is required." }, { status: 400 });
+  }
+
   try {
     const db = getDb();
     db.prepare(
       `INSERT INTO focus_conversion_history
-         (user_id, job_id, source_file, output_files, issue_count, status)
+         (email, job_id, source_file, output_files, issue_count, status)
        VALUES
          (?, ?, ?, ?, ?, ?)`,
     ).run(
-      session.userId,
+      email,
       body.jobId,
       body.sourceFile,
       body.outputFiles,
@@ -125,8 +111,7 @@ export async function POST(req: NextRequest) {
     log({
       level: "info",
       event: "conversion.saved",
-      userId: session.userId,
-      email: session.email,
+      email,
       ip,
       userAgent,
       details: {
@@ -144,8 +129,7 @@ export async function POST(req: NextRequest) {
     log({
       level: "error",
       event: "conversion.save.error",
-      userId: session.userId,
-      email: session.email,
+      email,
       ip,
       userAgent,
       details: { error: String(err) },

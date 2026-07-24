@@ -1,25 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { verifySession, SESSION_COOKIE } from "@/lib/auth";
 import { log, requestMeta } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   const { ip, userAgent } = requestMeta(req);
-  const token = req.cookies.get(SESSION_COOKIE)?.value;
-  const session = token ? await verifySession(token) : null;
-
   log({
     level: "info",
     event: "auth.logout",
-    userId: session?.userId,
-    email: session?.email,
     ip,
     userAgent,
   });
 
-  const res = NextResponse.json({ ok: true });
-  // Cookie is scoped to the deployment basePath; clear it with the same path.
-  res.cookies.set(SESSION_COOKIE, "", { path: "/focusimporter", maxAge: 0 });
-  return res;
+  // No cookies; client clears localStorage.
+  return NextResponse.json({ ok: true });
 }

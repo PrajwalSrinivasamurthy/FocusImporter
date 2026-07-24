@@ -22,7 +22,9 @@ export const useJobStore = create<JobState>((set) => ({
   fetchHistory: async () => {
     set({ loading: true });
     try {
-      const res = await fetch(withBasePath("/api/history"));
+      const email = localStorage.getItem("fi_user") ?? "";
+      const url = withBasePath(`/api/history?email=${encodeURIComponent(email)}`);
+      const res = await fetch(url);
       if (!res.ok) throw new Error("fetch failed");
       const records: HistoryRecord[] = await res.json();
       set({ history: records });
@@ -34,6 +36,7 @@ export const useJobStore = create<JobState>((set) => ({
   },
 
   addJob: (manifest) => {
+    const email = localStorage.getItem("fi_user") ?? "";
     const record: HistoryRecord = {
       jobId:            manifest.jobId,
       createdAt:        manifest.createdAt,
@@ -52,6 +55,7 @@ export const useJobStore = create<JobState>((set) => ({
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        email,
         jobId:       record.jobId,
         sourceFile:  record.sourceFileName,
         outputFiles: record.outputFiles,
@@ -69,7 +73,8 @@ export const useJobStore = create<JobState>((set) => ({
       ),
     }));
 
-    fetch(withBasePath(`/api/history/${encodeURIComponent(jobId)}`), { method: "PATCH" })
+    const email = localStorage.getItem("fi_user") ?? "";
+    fetch(withBasePath(`/api/history/${encodeURIComponent(jobId)}?email=${encodeURIComponent(email)}`), { method: "PATCH" })
       .catch((err) => console.error("[job-store] failed to mark overridden:", err));
   },
 }));
