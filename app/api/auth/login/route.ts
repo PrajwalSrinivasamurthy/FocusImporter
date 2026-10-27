@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       | undefined;
 
     // Run bcrypt even when user not found to prevent timing-based enumeration.
-    const hash = user?.password_hash ?? "$2b$12$notarealhashjustfortimingggggggggggggg";
+    const hash = user?.password_hash ?? "$2b$12$notarealhashjustfortiminggggggggggggggaaaaaaaaaaaaaaa";
     const match = await bcrypt.compare(password, hash);
 
     if (!user || !match) {

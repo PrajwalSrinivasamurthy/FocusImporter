@@ -13,7 +13,7 @@ import {
 // ── Output schema ─────────────────────────────────────────────────────────────
 
 export interface EnrollmentRow {
-  "External School ID": string;
+  "TTU Local Student ID": string;
   "Syear": string;
   "School ID": string;
   "Start Date": string;
@@ -23,7 +23,7 @@ export interface EnrollmentRow {
 }
 
 export const ENROLLMENT_HEADERS: ReadonlyArray<keyof EnrollmentRow> = [
-  "External School ID",
+  "TTU Local Student ID",
   "Syear",
   "School ID",
   "Start Date",
@@ -56,14 +56,16 @@ function mapRow(
   startDate: string,
 ): EnrollmentRow {
   return {
-    "External School ID": asString(
+    "TTU Local Student ID": asString(
       getCell(raw, idx, "Student School ID", "External School ID"),
     ),
     "Syear": details.syear,
     "School ID": details.schoolId,
     "Start Date": startDate,
     "End Date": "",
-    "Grade": asGrade(raw[7], true),
+    // Previous issues: column 8 by position, which is Student Email in the current template
+    // "Grade": asGrade(raw[7], true),
+    "Grade": asGrade(getCell(raw, idx, "Grade Level", "Grade"), true),
     "Enrollment Code": details.enrollmentCode,
   };
 }

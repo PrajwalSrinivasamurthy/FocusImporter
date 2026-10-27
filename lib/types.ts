@@ -6,6 +6,7 @@
 export interface ConversionDetails {
   regionCode: string;
   profile: string;
+  parentProfile: string;
   syear: string;
   enrollmentCode: string;
   startDate: string; // MM/DD/YYYY

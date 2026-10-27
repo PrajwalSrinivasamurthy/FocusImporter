@@ -32,6 +32,9 @@ const INTERNATIONAL = {
   defaultEnrollment: "INLT",
 } as const;
 
+// Same parent profile for both partner types
+const PARENT_PROFILES = [{ value: "[P3] Parent (TTU)", label: "[P3] Parent (TTU)" }] as const;
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function todayMDY(): string {
@@ -46,6 +49,7 @@ function defaultsForType(type: PartnerType, syear = "2026", startDate = todayMDY
     return {
       regionCode: "20",
       profile: DISTRICT.profiles[0].value,
+      parentProfile: PARENT_PROFILES[0].value,
       syear,
       enrollmentCode: DISTRICT.defaultEnrollment,
       startDate,
@@ -55,6 +59,7 @@ function defaultsForType(type: PartnerType, syear = "2026", startDate = todayMDY
   return {
     regionCode: "14",
     profile: INTERNATIONAL.profileByRegion["14"],
+    parentProfile: PARENT_PROFILES[0].value,
     syear,
     enrollmentCode: INTERNATIONAL.defaultEnrollment,
     startDate,
@@ -218,6 +223,18 @@ export function ConfirmDetailsForm({ onConfirm, initialValues, disabled }: Confi
               onChange={(v) => set("profile", v)}
               disabled={disabled}
               options={profileOptions}
+            />
+          </div>
+
+          {/* Parent Profile */}
+          <div className="flex flex-col gap-1.5">
+            <FieldLabel htmlFor="detail-parentProfile">Parent Profile</FieldLabel>
+            <Select
+              id="detail-parentProfile"
+              value={values.parentProfile}
+              onChange={(v) => set("parentProfile", v)}
+              disabled={disabled}
+              options={[...PARENT_PROFILES]}
             />
           </div>
 
