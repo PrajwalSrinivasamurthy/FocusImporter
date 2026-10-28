@@ -23,6 +23,13 @@ export function findIssues(
   const schoolIdColIdx =
     idx[norm("External School ID")] ?? idx[norm("Student School ID")] ?? -1;
 
+  // Parent columns (Step 4). Parent name = the second First/Last Name columns.
+  const parentEmailColIdx = idx[norm("Parent Email")] ?? -1;
+  const parentFirstColIdx = idx[norm("First Name.1")] ?? -1;
+  const parentLastColIdx  = idx[norm("Last Name.1")] ?? -1;
+  // Parent email -> first row that used it, to catch one email shared by different parents
+  const parentByEmail = new Map<string, { name: string; row: number }>();
+
   for (let i = 0; i < dataRows.length; i++) {
     const raw = dataRows[i];
     const sourceRowNum = i + 2 + hintOffset;
@@ -67,6 +74,45 @@ export function findIssues(
           type: "invalid_value",
           message: `'${emailStr}' is not a valid email address at row ${sourceRowNum}.`,
         });
+      }
+    }
+
+    // Parent Email is the parent's Username in Step 4 (Parent User Information).
+    if (parentEmailColIdx >= 0) {
+      const cellStr = (colIdx: number) =>
+        colIdx >= 0 && colIdx < raw.length && raw[colIdx] !== null
+          ? String(raw[colIdx]).trim()
+          : "";
+      const parentEmail = cellStr(parentEmailColIdx);
+
+      if (parentEmail === "") {
+        // No email → no Username → the parent row is skipped in Step 4
+        issues.push({
+          id: crypto.randomUUID(),
+          column: "Parent Email",
+          row: sourceRowNum,
+          cell: `${colLetter(parentEmailColIdx)}${sourceRowNum}`,
+          type: "empty_cell",
+          message: `Parent Email is missing at row ${sourceRowNum} — no parent account will be created.`,
+        });
+      } else {
+        // Step 4 keeps one row per email, so different parents sharing an email get merged.
+        // The same parent listed for siblings (same name) is fine and not reported.
+        const parentName = `${cellStr(parentFirstColIdx)} ${cellStr(parentLastColIdx)}`.trim();
+        const first = parentByEmail.get(norm(parentEmail));
+
+        if (!first) {
+          parentByEmail.set(norm(parentEmail), { name: parentName, row: sourceRowNum });
+        } else if (norm(first.name) !== norm(parentName)) {
+          issues.push({
+            id: crypto.randomUUID(),
+            column: "Parent Email",
+            row: sourceRowNum,
+            cell: `${colLetter(parentEmailColIdx)}${sourceRowNum}`,
+            type: "invalid_value",
+            message: `Parent Email '${parentEmail}' at row ${sourceRowNum} is also used by ${first.name || "another parent"} at row ${first.row} — they will be merged into one parent account.`,
+          });
+        }
       }
     }
   }
