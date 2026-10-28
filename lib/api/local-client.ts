@@ -11,6 +11,7 @@ import { buildEnrollmentCsv } from "@/lib/csv/enrollment";
 // import { buildPrimaryAddressCsv } from "@/lib/csv/primary-address";
 import { buildStudentContactCsv } from "@/lib/csv/student-contact";
 import { buildParentUserInfoCsv } from "@/lib/csv/parent-user-info";
+import { buildParentLinkedUserCsv } from "@/lib/csv/parent-linked-user";
 import { findIssues } from "@/lib/csv/issues";
 
 // ── In-browser job registry ───────────────────────────────────────────────────
@@ -100,6 +101,7 @@ export class LocalApiClient implements ApiClient {
     // const primaryAddr   = buildPrimaryAddressCsv(headers, rawRows);
     const studentContact = buildStudentContactCsv(headers, rawRows);
     const parentUserInfo = buildParentUserInfoCsv(headers, rawRows, details);
+    const parentLinkedUser = buildParentLinkedUserCsv(headers, rawRows);
 
     onStage?.(2); // → Deliver stage active
 
@@ -110,6 +112,7 @@ export class LocalApiClient implements ApiClient {
       // "Primary Address.csv":     primaryAddr.csvBlob,
       "Student Contact Information.csv": studentContact.csvBlob,
       "Parent User Information.csv":     parentUserInfo.csvBlob,
+      "Parent Linked Users.csv":         parentLinkedUser.csvBlob,
     };
 
     const outputFiles: OutputFile[] = [
@@ -118,6 +121,7 @@ export class LocalApiClient implements ApiClient {
       // makeOutputFile(jobId, "Primary Address.csv",     primaryAddr.csvBlob, primaryAddr.rows.length, 7),
       makeOutputFile(jobId, "Student Contact Information.csv", studentContact.csvBlob, studentContact.rows.length, 12),
       makeOutputFile(jobId, "Parent User Information.csv",     parentUserInfo.csvBlob, parentUserInfo.rows.length,  9),
+      makeOutputFile(jobId, "Parent Linked Users.csv",         parentLinkedUser.csvBlob, parentLinkedUser.rows.length, 3),
     ];
 
     return {
