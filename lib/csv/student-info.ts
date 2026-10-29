@@ -5,6 +5,7 @@ import {
   buildHeaderIndex,
   csvEscape,
   getCell,
+  getStudentId,
   skipFormatHintRow,
   type HeaderIndex,
 } from "@/lib/csv/utils";
@@ -127,9 +128,7 @@ function mapRow(
   details: ConversionDetails,
 ): StudentInfoRow {
   // Input has either "External School ID" or "Student School ID"; both are the local student ID.
-  const studentSchoolId = asString(
-    getCell(raw, idx, "External School ID", "Student School ID"),
-  );
+  const studentSchoolId = getStudentId(raw, idx);
 
   return {
     "Student School ID": studentSchoolId,
@@ -192,6 +191,8 @@ export function buildStudentInfoCsv(
     if (raw.every((v) => v === null || v === undefined || String(v).trim() === "")) {
       continue;
     }
+    // No student ID → the row can't be matched in Focus, so skip it (same rule in every CSV)
+    if (!getStudentId(raw, idx)) continue;
 
     // ── Previous issues (moved to findIssues in lib/csv/issues.ts) ──────────
     // const schoolIdVal = schoolIdColIdx >= 0 ? raw[schoolIdColIdx] : null;

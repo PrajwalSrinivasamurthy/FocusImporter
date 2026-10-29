@@ -1,8 +1,10 @@
 import {
+  asPhone,
   asString,
   buildHeaderIndex,
   csvEscape,
   getCell,
+  getStudentId,
   skipFormatHintRow,
   type HeaderIndex,
 } from "@/lib/csv/utils";
@@ -48,25 +50,11 @@ function asZip(val: unknown): string {
   return String(val).trim();
 }
 
-// Phone numbers can arrive as bare numbers (5551234567) if the source cell
-// has no text formatting. Convert to string without any modification so
-// the caller's formatting (dashes, spaces, country code) is preserved when
-// stored as text, and no digits are lost when stored as a number.
-function asPhone(val: unknown): string {
-  if (val === null || val === undefined) return "";
-  if (typeof val === "number") {
-    return String(Math.round(val));
-  }
-  return String(val).trim();
-}
-
 // ── Row mapper ────────────────────────────────────────────────────────────────
 
 function mapRow(raw: unknown[], idx: HeaderIndex): PrimaryAddressRow {
   return {
-    "External School ID": asString(
-      getCell(raw, idx, "External School ID", "Student School ID"),
-    ),
+    "External School ID": getStudentId(raw, idx),
     "Address":          asString(getCell(raw, idx, "Address")),
     "Address 2":        asString(getCell(raw, idx, "Address 2")),
     "City":             asString(getCell(raw, idx, "City")),
@@ -97,6 +85,8 @@ export function buildPrimaryAddressCsv(
     if (raw.every((v) => v === null || v === undefined || String(v).trim() === "")) {
       continue;
     }
+    // No student ID → the row can't be matched in Focus, so skip it (same rule in every CSV)
+    if (!getStudentId(raw, idx)) continue;
     mappedRows.push(mapRow(raw, idx));
   }
 
