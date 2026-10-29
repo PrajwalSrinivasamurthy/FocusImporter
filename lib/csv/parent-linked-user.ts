@@ -1,11 +1,9 @@
 import {
   buildHeaderIndex,
   csvEscape,
-  getCell,
-  asString,
+  getStudentId,
   peopleImportKey,
   skipFormatHintRow,
-  type HeaderIndex,
 } from "@/lib/csv/utils";
 
 import { getParentKey } from "@/lib/csv/parent-user-info";
@@ -42,12 +40,6 @@ function mapRow(studentId: string): ParentLinkedUserRow {
     // Same key as "People Import Key" in Student Contact (Step 3)
     "Person ID": peopleImportKey(studentId),
   };
-}
-
-function getStudentId(raw: unknown[], idx: HeaderIndex): string {
-  return asString(
-    getCell(raw, idx, "External School ID", "Student School ID", "TTU Local Student ID"),
-  );
 }
 
 // ── CSV serialiser ────────────────────────────────────────────────────────────

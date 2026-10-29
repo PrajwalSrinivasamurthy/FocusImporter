@@ -52,6 +52,24 @@ export function asString(val: unknown): string {
   return String(val).trim();
 }
 
+// TTU Local Student ID. Every builder skips rows where this is blank, so all
+// five CSVs contain the same set of students.
+export function getStudentId(raw: unknown[], idx: HeaderIndex): string {
+  return asString(
+    getCell(raw, idx, "External School ID", "Student School ID", "TTU Local Student ID"),
+  );
+}
+
+// Phone numbers are kept exactly as typed (806-555-0131 stays 806-555-0131).
+// Bare numbers (8065550131, from cells with no text formatting) become plain digits.
+export function asPhone(val: unknown): string {
+  if (val === null || val === undefined) return "";
+  if (typeof val === "number") {
+    return String(Math.round(val));
+  }
+  return String(val).trim();
+}
+
 // cyrb53: small sync 53-bit string hash (public domain). Deterministic, no dependencies.
 function hash53(str: string, seed = 0): number {
   let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;

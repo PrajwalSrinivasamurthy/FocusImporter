@@ -1,9 +1,11 @@
 import type { ConversionDetails } from "@/lib/types";
 import {
+  asPhone,
   asString,
   buildHeaderIndex,
   csvEscape,
   getCell,
+  getStudentId,
   norm,
   skipFormatHintRow,
   type HeaderIndex,
@@ -100,16 +102,17 @@ export interface ParentUserInfoResult {
 
 // ── Value transformers ────────────────────────────────────────────────────────
 
-// Spec format for Contact Cell Phone: (123) 456-7890
-function asPhone(val: unknown): string {
-  if (val === null || val === undefined) return "";
-  const raw = typeof val === "number" ? String(Math.round(val)) : String(val).trim();
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length === 10) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-  }
-  return raw;
-}
+// Previous issues: reformatted Contact Cell Phone to (123) 456-7890, so it no longer
+// matched the Phone Number in Student Contact. Now uses the shared asPhone (kept as typed).
+// function asPhone(val: unknown): string {
+//   if (val === null || val === undefined) return "";
+//   const raw = typeof val === "number" ? String(Math.round(val)) : String(val).trim();
+//   const digits = raw.replace(/\D/g, "");
+//   if (digits.length === 10) {
+//     return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+//   }
+//   return raw;
+// }
 
 // ── Row mapper ────────────────────────────────────────────────────────────────
 
@@ -165,9 +168,7 @@ function mapRow(
       getCell(raw, idx, "Contact Value", "Contact Cell Phone", "CONTACT_VALUE1"),
     ),
     // TTU Local Student ID = External School ID / Student School ID
-    "TTU Local Student ID": asString(
-      getCell(raw, idx, "External School ID", "Student School ID", "TTU Local Student ID"),
-    ),
+    "TTU Local Student ID": getStudentId(raw, idx),
     // Previous issues: hardcoded instead of using the Parent Profile picked in Confirm Details.
     // "Profile ID": "[P3] Parent (TTU)",
     "Profile ID": details.parentProfile,
@@ -198,6 +199,10 @@ export function buildParentUserInfoCsv(
     if (raw.every((v) => v === null || v === undefined || String(v).trim() === "")) {
       continue;
     }
+
+    // No student ID → skip before the dedupe below, so a sibling row with an ID
+    // can still create this parent's account
+    if (!getStudentId(raw, idx)) continue;
 
     const parentKey = getParentKey(raw, idx);
     if (!parentKey) continue;

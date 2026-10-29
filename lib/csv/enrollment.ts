@@ -5,6 +5,7 @@ import {
   buildHeaderIndex,
   csvEscape,
   getCell,
+  getStudentId,
   skipFormatHintRow,
   type HeaderIndex,
 } from "@/lib/csv/utils";
@@ -56,9 +57,7 @@ function mapRow(
   startDate: string,
 ): EnrollmentRow {
   return {
-    "TTU Local Student ID": asString(
-      getCell(raw, idx, "Student School ID", "External School ID"),
-    ),
+    "TTU Local Student ID": getStudentId(raw, idx),
     "Syear": details.syear,
     "School ID": details.schoolId,
     "Start Date": startDate,
@@ -94,6 +93,8 @@ export function buildEnrollmentCsv(
     if (raw.every((v) => v === null || v === undefined || String(v).trim() === "")) {
       continue;
     }
+    // No student ID → the row can't be matched in Focus, so skip it (same rule in every CSV)
+    if (!getStudentId(raw, idx)) continue;
     mappedRows.push(mapRow(raw, idx, details, startDate));
   }
 

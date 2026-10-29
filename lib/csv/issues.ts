@@ -47,7 +47,7 @@ export function findIssues(
         row: sourceRowNum,
         cell: `${colLetter(Math.max(schoolIdColIdx, 0))}${sourceRowNum}`,
         type: "empty_cell",
-        message: `External School ID or Student School ID is missing at row ${sourceRowNum}.`,
+        message: `External School ID or Student School ID is missing at row ${sourceRowNum}. This row is skipped in every output file.`,
       });
     }
 
