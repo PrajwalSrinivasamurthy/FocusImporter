@@ -70,24 +70,28 @@ export function asPhone(val: unknown): string {
   return String(val).trim();
 }
 
-// cyrb53: small sync 53-bit string hash (public domain). Deterministic, no dependencies.
-function hash53(str: string, seed = 0): number {
-  let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
-  for (let i = 0; i < str.length; i++) {
-    const ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-  }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  return 4294967296 * (2097151 & h2) + (h1 >>> 0);
-}
-
-// People Import Key: same student -> same key in every CSV. Blank ID -> blank key.
-export function peopleImportKey(studentId: string): string {
-  const id = studentId.trim();
-  return id === "" ? "" : String(hash53(id, 2026));
-}
+// Previous issues: we generated our own People Import Key / Person ID by hashing
+// the TTU Local Student ID. That value is the Focus ID, which Focus SIS creates
+// after the Student Information import (Step 1), so ours would never match. Removed.
+//
+// // cyrb53: small sync 53-bit string hash (public domain). Deterministic, no dependencies.
+// function hash53(str: string, seed = 0): number {
+//   let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+//   for (let i = 0; i < str.length; i++) {
+//     const ch = str.charCodeAt(i);
+//     h1 = Math.imul(h1 ^ ch, 2654435761);
+//     h2 = Math.imul(h2 ^ ch, 1597334677);
+//   }
+//   h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+//   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+//   return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+// }
+//
+// // People Import Key: same student -> same key in every CSV. Blank ID -> blank key.
+// export function peopleImportKey(studentId: string): string {
+//   const id = studentId.trim();
+//   return id === "" ? "" : String(hash53(id, 2026));
+// }
 
 export function colLetter(colIdx: number): string {
   let result = "";
