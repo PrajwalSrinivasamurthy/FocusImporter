@@ -8,7 +8,7 @@ export default function ConversionPage() {
           Conversion
         </p>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-strong">
-          One workbook in, three import files out.
+          One workbook in, Five import files out.
         </h1>
         <p className="mt-2 max-w-xl text-sm text-muted">
           Drop a school&apos;s student workbook below. It gets validated,
